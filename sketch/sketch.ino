@@ -19,7 +19,7 @@
 
 
 char* pass = "your_wifi_pass";
-char* ssid = "Vodafone-2162";
+char* ssid = "mom click here for internet";
 
 
 const uint16_t port = 1337;
