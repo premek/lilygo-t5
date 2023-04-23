@@ -1,7 +1,7 @@
 # LILYGO T5 Wifi E-Paper weather dashboard
 
 ## Server
-- TODO generates a bitmap to be displayed on the eink display
+- generates a bitmap to be displayed on the eink display
 - converts the bitmap to a format understood by the display
 - servers the bitmap on a HTTP server
 
