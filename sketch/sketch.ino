@@ -17,9 +17,10 @@
 
 #define BUTTON_PIN (39)
 
-
-char* pass = "your_wifi_pass";
-char* ssid = "mom click here for internet";
+char* pass1 = "idontknow";
+char* ssid1 = "mom click here for internet";
+char* pass2 = "youshallnotpassword";
+char* ssid2 = "Lord of the Pings";
 
 const String lat = "25.276987";
 const String lon = "55.296249";
@@ -56,7 +57,8 @@ void setup() {
 void wifi_connect() {
   WiFiMulti WiFiMulti;
 
-  WiFiMulti.addAP(ssid, pass);
+  WiFiMulti.addAP(ssid1, pass1);
+  WiFiMulti.addAP(ssid2, pass2);
 
   Serial.println();
   Serial.print("Waiting for WiFi...");
