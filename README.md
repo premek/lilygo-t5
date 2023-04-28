@@ -1,9 +1,14 @@
 # LILYGO T5 Wifi E-Paper weather dashboard
 
+![eink screen in a white frame](IMG_20230427_233910.jpg)
+
+![the T5 beautifully attached to the frame using sticky tape](IMG_20230427_233934.jpg)
+
 ## Server
-- generates a bitmap to be displayed on the eink display
+- generates a SVG file using a SVG template and data downloaded from a weather forecast API
+- converts the SVG to a bitmap using cairosvg (converting using `convert` command line tool gave me nicer results but I can call cairosvg directly from python)
 - converts the bitmap to a format understood by the display
-- servers the bitmap on a HTTP server
+- serves the bitmap on a HTTP server
 
 ### Install
 - install pip and cairo `apt install python3-pip cairosvg`
