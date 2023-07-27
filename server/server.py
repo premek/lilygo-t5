@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import base64
 import io
+import os
 import sys
 from urllib.parse import urlparse, parse_qsl
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -9,6 +10,7 @@ import requests
 from cairosvg import svg2png
 from PIL import Image
 
+filedir = os.path.dirname(os.path.realpath(__file__))
 
 class InputValidationException(Exception):
     pass
@@ -40,7 +42,7 @@ def file_to_str(name):
 
 
 def ico(name):
-    bytez = file_to_bytes(f"yr/ico/png/{name}.png")
+    bytez = file_to_bytes(f"{filedir}/yr/ico/png/{name}.png")
     return "data:image/png;base64," + base64.b64encode(bytez).decode()
 
 
@@ -73,7 +75,7 @@ def get_variables(data):
 
 
 def get_svg(data):
-    res = file_to_str("screen_template.svg")
+    res = file_to_str(f"{filedir}/screen_template.svg")
     for variable, value in get_variables(data):
         res = res.replace(variable, value)
     return res
