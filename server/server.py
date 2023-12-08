@@ -50,7 +50,7 @@ def minmax(min_value, max_value):
     rmin = round(min_value)
     rmax = round(max_value)
     if rmin == rmax:
-        return rmin
+        return f"{rmin}"
     return f"{rmin}-{rmax}"
 
 
