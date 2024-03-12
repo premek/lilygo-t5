@@ -2,6 +2,8 @@
 
 sudo apt install python3-pip cairosvg libopenjp2-7
 
+#python3 -m venv venv
+#venv/bin/python -m pip install -r requirements.txt
 /usr/bin/env python3 -m pip install -r requirements.txt
 
 ./test.sh &&
