@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import unittest
 import base64
 import io
 import os
@@ -55,11 +56,28 @@ def minmax(min_value, max_value):
     return f"{rmin}-{rmax}"
 
 
+def ms2kmh(meters_per_second):
+    # m/s -> km/h
+    return meters_per_second * 3.6
+
+
+def feelslike(temp, wind_ms):
+    # Wind chill factor is only used when the temperature is < 10°C and the wind speed is > 1.33 m/s
+    if temp < 10 and wind_ms > 1.33:
+        wind_pow = pow(ms2kmh(wind_ms), 0.16)
+        return round(13.12 + 0.6215 * temp - 11.37 * wind_pow + 0.3965 * temp * wind_pow)
+    # Heat index is only used when the temperature is > 26°C and humidity > 40 %,
+    return round(temp)
+
+
 def get_variables(data):
     current = data["properties"]["timeseries"][0]["data"]
     return {
         "#temp#": str(round(current["instant"]["details"]["air_temperature"])),
         "#wind#": str(round(current["instant"]["details"]["wind_speed"])),
+        "#feel#": str(
+            feelslike(current["instant"]["details"]["air_temperature"], current["instant"]["details"]["wind_speed"])
+        ),
         "#ico#": ico(current["next_1_hours"]["summary"]["symbol_code"]),
         "#ico2#": ico(current["next_6_hours"]["summary"]["symbol_code"]),
         # "#ico3#": ico(current["next_12_hours"]["summary"]["symbol_code"]),
@@ -207,3 +225,31 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# tests
+class MyTest(unittest.TestCase):
+    def test_speed(self):
+        self.assertEqual(ms2kmh(1), 3.6)
+
+    def test_feelslike(self):
+        self.assertEqual(feelslike(1, 9), -5)
+        self.assertEqual(feelslike(1, 1.3), 1)
+        self.assertEqual(feelslike(10, 9), 10)
+        self.assertEqual(feelslike(3, 3), 0)
+        self.assertEqual(feelslike(9, 2), 8)
+        self.assertEqual(feelslike(4, 5), 0)
+        self.assertEqual(feelslike(0, 5), -5)
+        self.assertEqual(feelslike(-4, 4), -9)
+        self.assertEqual(feelslike(-2, 4), -7)
+        self.assertEqual(feelslike(21.8, 9), 22)  # round even if returning the input value
+
+    def test_minmax(self):
+        self.assertEqual(minmax(1, 2), "1-2")
+        self.assertEqual(minmax(2, 1), "2-1")
+        self.assertEqual(minmax(1, 1), "1")
+        self.assertEqual(minmax(1.9, 2.1), "2")
+        self.assertEqual(minmax(1.9, 10.1), "2-10")
+        self.assertEqual(minmax(-1.9, 10.1), "-2-10")
+        self.assertEqual(minmax(1.9, -10.1), "2--10")
+        self.assertEqual(minmax(-1.9, -10.1), "-2--10")
