@@ -62,7 +62,7 @@ def get_variables(data):
         "#wind#": str(round(current["instant"]["details"]["wind_speed"])),
         "#ico#": ico(current["next_1_hours"]["summary"]["symbol_code"]),
         "#ico2#": ico(current["next_6_hours"]["summary"]["symbol_code"]),
-        #"#ico3#": ico(current["next_12_hours"]["summary"]["symbol_code"]),
+        # "#ico3#": ico(current["next_12_hours"]["summary"]["symbol_code"]),
         # TEMP=$(round "$(jq '.properties.timeseries[0].data.instant.details.air_temperature' "$T")")
         # WIND=$(jq '.properties.timeseries[0].data.instant.details.wind_speed' "$T")
         "#r1#": str(round(current["next_1_hours"]["details"]["precipitation_amount"], 1)),
