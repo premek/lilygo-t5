@@ -1,0 +1,3 @@
+# crontab -e
+
+@reboot /home/pi/lilygo-t5/server/server.py >> /home/pi/lilygo-t5-server.log
