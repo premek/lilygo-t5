@@ -1,3 +1,3 @@
-# crontab -e
+# crontab -e ### run under a user, the server will run under the user too
 
 @reboot /home/pi/lilygo-t5/server/server.py 2>&1 >> /home/pi/lilygo-t5-server.log
