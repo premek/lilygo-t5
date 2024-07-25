@@ -1,0 +1,11 @@
+# /etc/logrotate.d/lilygo-server
+
+/home/pi/lilygo-t5-server.log {
+	weekly
+	rotate 4
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 644 root root
+}
