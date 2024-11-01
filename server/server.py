@@ -6,10 +6,12 @@ import os
 import sys
 from urllib.parse import urlparse, parse_qsl
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import uuid
 import requests
-
 from cairosvg import svg2png
 from PIL import Image
+
+HEALTHCHECKS_IO_BASE_URL = "https://hc-ping.com/<your-key>/<your-slug>"
 
 filedir = os.path.dirname(os.path.realpath(__file__))
 
@@ -152,6 +154,23 @@ def to_eink(png: bytes):
     return black + color
 
 
+class Monitor:
+    base_url = HEALTHCHECKS_IO_BASE_URL
+    run_id = str(uuid.uuid4())
+
+    def send(self, url):
+        try:
+            requests.get(url, timeout=5)
+        except requests.exceptions.RequestException:
+            pass
+
+    def start(self):
+        self.send(self.base_url + "/start?rid=" + self.run_id)
+
+    def finish(self):
+        self.send(self.base_url + "?rid=" + self.run_id)
+
+
 class Handler(BaseHTTPRequestHandler):
     def send(self, content_type, resp):
         self.send_response(200)
@@ -192,7 +211,9 @@ class Handler(BaseHTTPRequestHandler):
         handler(data)
 
     def do_GET(self):  # pylint: disable=invalid-name
+        monitor = Monitor()
         try:
+            monitor.start()
             url = urlparse(self.path)
             if url.path == "/weather":
                 self.weather(url.query)
@@ -204,6 +225,8 @@ class Handler(BaseHTTPRequestHandler):
             exception(self, ex, 400)
         except Exception as ex:  # pylint: disable=broad-exception-caught
             exception(self, ex, 500)
+        finally:
+            monitor.finish()
 
 
 def exception(self, ex, resp):
