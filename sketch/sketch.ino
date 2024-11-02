@@ -2,13 +2,15 @@
 // HttpClient 2.2.0 by Adrian McEwen
 // Adafruit GFX Library by Adafruit (install with dependencies)
 // https://github.com/michaelkamprath/ePaperDriverLib (Code -> Download ZIP -> extract to ~/Arduino/libraries)
+// UUID 0.1.6 by Rob Tillaart
 
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HttpClient.h>
 #include <ePaperDriver.h>
+#include "UUID.h"
 
-#define SLEEP_SECONDS 60*15
+#define SLEEP_SECONDS 60*10
 
 #define ELINK_SS (5)
 #define ELINK_BUSY (4)
@@ -30,6 +32,14 @@ const uint16_t port = 1337;
 const char* host = "192.168.0.75";
 String path = "/weather?format=eink&lat="+lat+"&lon="+lon+"&alt="+alt;
 
+const char* monitor_host = "hc-ping.com";
+const uint16_t monitor_port = 80;
+String monitor_base_path = "/<your-ping-key>/<your-slug>";
+
+WiFiClient client;
+UUID uuid;
+
+
 // Number of milliseconds to wait without receiving any data before we give up
 const int kNetworkTimeout = 30 * 1000;
 // Number of milliseconds to wait if no data is available before trying again
@@ -48,8 +58,10 @@ void setup() {
   Serial.begin(115200);
 
   wifi_connect();
+  monitor_start();
   download_bitmap();
   display_bitmap();
+  monitor_finish();
   deep_sleep();
 }
 
@@ -71,14 +83,29 @@ void wifi_connect() {
   Serial.println("");
   Serial.print("WiFi connected, IP address: ");
   Serial.println(WiFi.localIP());
-  //delay(500);
+}
+
+void monitor_start() {
+  uuid.generate();
+  http_get(monitor_host, monitor_port, monitor_base_path+ "/start?rid="+uuid.toCharArray());
+}
+
+void monitor_finish() {
+  // reuse the same uuid when generate() not called
+  http_get(monitor_host, monitor_port, monitor_base_path + "?rid="+uuid.toCharArray());
+}
+
+void http_get(const char* host, const uint16_t port, String path) {
+  HttpClient http(client);
+  http.get(host, port, path.c_str());
+  // ignore errors
+  http.stop();
 }
 
 void download_bitmap() {
   Serial.print("Connecting to ");
   Serial.println(host);
 
-  WiFiClient client;
   HttpClient http(client);
   get_bitmap(http);
   http.stop();
@@ -163,8 +190,10 @@ void deep_sleep() {
   //  esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, LOW);
   Serial.println("Going to sleep now");
   Serial.flush();
-  esp_deep_sleep_start();
+  esp_deep_sleep_start(); // should work as reset, the code will continue to run from setup()
 }
 
 void loop() {
+  // it should never get here, deep sleep is intered in setup(), and setup() is caled again after wakeup
+  delay(5000);
 }
