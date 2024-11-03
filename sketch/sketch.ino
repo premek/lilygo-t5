@@ -97,8 +97,19 @@ void monitor_finish() {
 
 void http_get(const char* host, const uint16_t port, String path) {
   HttpClient http(client);
-  http.get(host, port, path.c_str());
-  // ignore errors
+  int get_err = http.get(host, port, path.c_str());
+  if (get_err != 0) {
+    Serial.print("Connect failed: "); // TODO show errors on screen
+    Serial.println(get_err);
+    return;
+  }
+  int status = http.responseStatusCode();
+  if (status < 0) {
+    Serial.print("Getting response failed: ");
+    Serial.println(status);
+    return;
+  }
+
   http.stop();
 }
 
