@@ -7,11 +7,14 @@ import sys
 from urllib.parse import urlparse, parse_qsl
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import uuid
+import tomllib
 import requests
 from cairosvg import svg2png
 from PIL import Image
 
-HEALTHCHECKS_IO_BASE_URL = "https://hc-ping.com/<your-key>/<your-slug>"
+with open("config.toml", "rb") as f:
+    config = tomllib.load(f)
+
 
 filedir = os.path.dirname(os.path.realpath(__file__))
 
@@ -155,7 +158,7 @@ def to_eink(png: bytes):
 
 
 class Monitor:
-    base_url = HEALTHCHECKS_IO_BASE_URL
+    base_url = config["monitoring"]["healthchecks_io"]["base_url"]
     run_id = str(uuid.uuid4())
 
     def send(self, url):

@@ -1,0 +1,3 @@
+[monitoring]
+[monitoring.healthchecks_io]
+base_url = "https://hc-ping.com/<your-key>/<your-slug>"
