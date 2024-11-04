@@ -8,13 +8,13 @@ from urllib.parse import urlparse, parse_qsl
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import uuid
 import logging
-import tomllib
+import configparser
 import requests
 from cairosvg import svg2png
 from PIL import Image
 
-with open("config.toml", "rb") as f:
-    config = tomllib.load(f)
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 log_level_info = {
     "DEBUG": logging.DEBUG,
@@ -22,7 +22,6 @@ log_level_info = {
     "WARNING": logging.WARNING,
     "ERROR": logging.ERROR,
 }
-
 
 log = logging.getLogger(__name__)
 logging.basicConfig(
@@ -183,7 +182,7 @@ def to_eink(png: bytes):
 
 
 class Monitor:
-    base_url = config["monitoring"]["healthchecks_io"]["base_url"]
+    base_url = config["monitoring.healthchecks_io"]["base_url"]
     run_id = str(uuid.uuid4())
 
     def send(self, url):
