@@ -7,6 +7,7 @@ import sys
 from urllib.parse import urlparse, parse_qsl
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import uuid
+import logging
 import tomllib
 import requests
 from cairosvg import svg2png
@@ -14,6 +15,29 @@ from PIL import Image
 
 with open("config.toml", "rb") as f:
     config = tomllib.load(f)
+
+log_level_info = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+}
+
+
+log = logging.getLogger(__name__)
+logging.basicConfig(
+    filename=config["logging"]["file"],
+    format=config["logging"]["format"],
+    encoding="utf-8",
+    level=log_level_info.get(config["logging"]["level"]),
+)
+
+
+def exception_handler(exception_type, value, traceback):
+    log.exception("Uncaught exception: %s %s %s", exception_type, value, traceback)
+
+
+sys.excepthook = exception_handler
 
 
 filedir = os.path.dirname(os.path.realpath(__file__))
@@ -29,6 +53,7 @@ class FetchException(Exception):
 
 def fetch_yr(lat, lon, alt):
     url = f"https://api.met.no/weatherapi/locationforecast/2.0/complete?lat={lat}&lon={lon}&altitude={alt}"
+    log.info("fetching %s", url)
     headers = {
         "User-Agent": "meteo/0.1 github.com/premek",
     }
@@ -180,6 +205,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-type", content_type)
         self.end_headers()
         self.wfile.write(resp)
+        log.info("%s response sent: %i bytes", content_type, len(resp))
 
     def send_svg(self, data):
         self.send("image/svg+xml", get_svg(data).encode())
@@ -211,9 +237,11 @@ class Handler(BaseHTTPRequestHandler):
     def weather(self, query):
         lat, lon, alt, handler = self.parse_params(query)
         data = fetch_yr(lat, lon, alt)
+        log.debug("handling data %s using handler %s", data, handler)
         handler(data)
 
     def do_GET(self):  # pylint: disable=invalid-name
+        log.info("GET %s", self.path)
         monitor = Monitor()
         try:
             monitor.start()
@@ -221,21 +249,20 @@ class Handler(BaseHTTPRequestHandler):
             if url.path == "/weather":
                 self.weather(url.query)
             else:
+                log.info("not found: %s", self.path)
                 self.send_response(404)
                 self.end_headers()
 
-        except InputValidationException as ex:
-            exception(self, ex, 400)
-        except Exception as ex:  # pylint: disable=broad-exception-caught
-            exception(self, ex, 500)
+        except InputValidationException:
+            log.exception("bad request")
+            self.send_response(400)
+            self.end_headers()
+        except Exception:  # pylint: disable=broad-exception-caught
+            log.exception("server error")
+            self.send_response(500)
+            self.end_headers()
         finally:
             monitor.finish()
-
-
-def exception(self, ex, resp):
-    print(f"{type(ex)}: {ex}", file=sys.stderr)
-    self.send_response(resp)
-    self.end_headers()
 
 
 def main():
@@ -245,7 +272,8 @@ def main():
     request_handler.sys_version = ""
 
     httpd = HTTPServer(("0.0.0.0", port), request_handler)
-    print(f"http://localhost:{port}/weather?format=png&lat=25.276987&lon=55.296249&alt=2")
+    logging.info("listening on port %i", port)
+    logging.info("http://localhost:%i/weather?format=png&lat=25.276987&lon=55.296249&alt=2", port)
     httpd.serve_forever()
 
 
