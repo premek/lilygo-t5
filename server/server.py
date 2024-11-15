@@ -14,7 +14,7 @@ from cairosvg import svg2png
 from PIL import Image
 
 config = configparser.ConfigParser()
-config.read("config.ini")
+config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
 
 log_level_info = {
     "DEBUG": logging.DEBUG,
