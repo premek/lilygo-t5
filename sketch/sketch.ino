@@ -8,9 +8,10 @@
 #include <WiFiMulti.h>
 #include <HttpClient.h>
 #include <ePaperDriver.h>
+#include <Fonts/FreeSans9pt7b.h>
 #include "UUID.h"
 
-#define SLEEP_SECONDS 60*10
+#define SLEEP_SECONDS 60*20
 
 #define ELINK_SS (5)
 #define ELINK_BUSY (4)
@@ -39,12 +40,10 @@ String monitor_base_path = "/<your-ping-key>/<your-slug>";
 WiFiClient client;
 UUID uuid;
 
-
 // Number of milliseconds to wait without receiving any data before we give up
 const int kNetworkTimeout = 30 * 1000;
 // Number of milliseconds to wait if no data is available before trying again
 const int kNetworkDelay = 1000;
-
 
 const int screenBytes = 2756;  // bit per pixel: 212x104 / 8;
 
@@ -54,9 +53,12 @@ uint8_t colorBitMap[screenBytes] = { 0 };
 
 boolean downloaded = false;
 
+ePaperDisplay* device = new ePaperDisplay(GDEW0213T5, ELINK_BUSY, ELINK_RESET, ELINK_DC, ELINK_SS);
+
 void setup() {
   Serial.begin(115200);
-
+  //display_clear();
+  message("Thinking"); // after wakeup the screen outside the message is not kept (overwriten with random data)
   wifi_connect();
   monitor_start();
   download_bitmap();
@@ -182,8 +184,6 @@ void display_bitmap() {
     return;
   }
 
-  ePaperDisplay* device = new ePaperDisplay(GDEW0213T5, ELINK_BUSY, ELINK_RESET, ELINK_DC, ELINK_SS);
-
   device->setDeviceImage(
     blackBitMap,
     screenBytes,  //blackBitMapSize
@@ -196,6 +196,11 @@ void display_bitmap() {
   device->refreshDisplay();
 }
 
+void display_clear() {
+  device->clearDisplay();
+  device->refreshDisplay();
+}
+
 void deep_sleep() {
   esp_sleep_enable_timer_wakeup(SLEEP_SECONDS * 1000000ULL);
   //  esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, LOW);
@@ -204,7 +209,32 @@ void deep_sleep() {
   esp_deep_sleep_start(); // should work as reset, the code will continue to run from setup()
 }
 
+void message(const char* message) {
+  const __FlashStringHelper *str = F(message);
+  int16_t x, y;
+  uint16_t w, h;
+  int centerX = device->width()/2;
+  device->setFont(&FreeSans9pt7b);
+  device->getTextBounds(str, 0, 0, &x, &y, &w, &h);
+  x = centerX-w/2;
+  y = 20;
+
+  //device->clearDisplay();
+  rect(x-7, y-5, w+7*2, h+5*2);
+
+  device->setTextColor(ePaper_BLACK);
+  device->setCursor(x-2, y+14);
+  device->print(str);
+  device->refreshDisplay();
+}
+
+void rect(int16_t x, int16_t y, uint16_t w, uint16_t h) {
+  device->fillRect(x, y, w, h, ePaper_WHITE);
+  device->drawRect(x, y, w, h, ePaper_BLACK);
+  device->drawRect(x-1, y-1, w+2, h+2, ePaper_WHITE); // some bug, rect border lines are too long
+}
+
 void loop() {
-  // it should never get here, deep sleep is intered in setup(), and setup() is caled again after wakeup
+  // it should never get here, deep sleep is entered in setup(), and setup() is caled again after wakeup
   delay(5000);
 }
