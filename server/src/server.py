@@ -14,7 +14,7 @@ from cairosvg import svg2png
 from PIL import Image
 
 config = configparser.ConfigParser()
-config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
+config.read(os.path.join(os.path.dirname(__file__), "config.ini"))
 
 log_level_info = {
     "DEBUG": logging.DEBUG,
@@ -24,8 +24,10 @@ log_level_info = {
 }
 
 log = logging.getLogger(__name__)
+
+
 logging.basicConfig(
-    filename=config["logging"]["file"],
+    stream=sys.stdout,
     format=config["logging"]["format"],
     encoding="utf-8",
     level=log_level_info.get(config["logging"]["level"]),
@@ -265,7 +267,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    port = 1337
+    port = int(config["server"]["port"])
     request_handler = Handler
     request_handler.server_version = ""
     request_handler.sys_version = ""

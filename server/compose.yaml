@@ -1,0 +1,6 @@
+services:
+  weather:
+    image: weather
+    restart: unless-stopped
+    ports:
+      - 9001:8080
